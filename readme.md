@@ -113,4 +113,4 @@ http://127.0.0.1:8000/api/data_sources/all -- GET
 ```
 
 http://127.0.0.1:8000/api/consumers/getProducts -- GET
-#### Returns the data consumed from the data sources.
+Returns the data consumed from the data sources.

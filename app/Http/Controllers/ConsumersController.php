@@ -15,102 +15,124 @@ class ConsumersController extends Controller
 
     	foreach ($data_sources as $data_source) {
     		$path_array = explode('.', $data_source->path);
+    		$ext = $path_array[count($path_array)-1];
 
-			// If CSV File
-    		if ($path_array[count($path_array)-1] == 'csv') {
-				$url = $data_source->path;
-				$path = public_path('downloads/tmp.csv');
-
-				// Storing the file
-				$stored = $this->storeFile($url, $path);
-
-				if ($stored) {
-					// Content of the file to an array
-					$file = fopen($path, "r");
-					$csv_content = array();
-					while (($data = fgetcsv($file, 200, ",")) !== FALSE) {
-						array_push($csv_content, $data);
-					}
-					fclose($file);
-
-					$products->push([$data_source->name => $csv_content]);
-				}
-    		} elseif ($path_array[count($path_array)-1] == 'json') {
-				$url = $data_source->path;
-				$path = public_path('downloads/tmp.json');
-
-				// Storing the file
-				$stored = $this->storeFile($url, $path);
-
-				if ($stored) {
-					// Content of the file to an array
-					$content = file_get_contents(public_path('downloads/tmp.json'));
-			        $json_content = json_decode($content, true);
-
-					$products->push([$data_source->name => $json_content]);
-				}
-    		} elseif ($path_array[count($path_array)-1] == 'xml') {
-				$url = $data_source->path;
-				$path = public_path('downloads/tmp.xml');
-
-				// Storing the file
-				$stored = $this->storeFile($url, $path);
-
-				if ($stored) {
-					// Content of the file to an array
-					$content = file_get_contents(public_path('downloads/tmp.xml'));
-					$xml_content = simplexml_load_string($content);
-					$xml_json_array = json_decode(json_encode($xml_content), true);
-
-					$products->push([$data_source->name => $xml_json_array]);
-				}
-    		}  elseif ($path_array[count($path_array)-1] == 'xls') {
-				$url = $data_source->path;
-				$path = public_path('downloads/tmp.xls');
-
-				// Storing the file
-				$stored = $this->storeFile($url, $path);
-
-				if ($stored) {
-					// Content of the file to an array
-					$data = Excel::load($path)->get();
-
-					$products->push([$data_source->name => $data]);
-				}
-    		}  elseif ($path_array[count($path_array)-1] == 'xlsx') {
-				$url = $data_source->path;
-				$path = public_path('downloads/tmp.xlsx');
-
-				// Storing the file
-				$stored = $this->storeFile($url, $path);
-
-				if ($stored) {
-					// Content of the file to an array
-					$data = Excel::load($path)->get();
-
-					$products->push([$data_source->name => $data]);
-				}
+    		if (in_array($ext, ['csv', 'json', 'xml', 'xls', 'xlsx'])) {
+    			// File handling
+    			$content = $this->handleFile($data_source->path, $ext);
+    			if (count($content)) {
+    				$products->push([$data_source->name => $content]);
+    			}
     		} else {
-	    		// If API (JSON or XML text)
+	    		// If API (JSON or XML)
 	    		$content = file_get_contents($data_source->path);
 				$file_info = new finfo(FILEINFO_MIME_TYPE);
 				$mime_type = $file_info->buffer($content);
 
-				if ($mime_type == "text/plain") {
-					// JSON
-					$json_content = json_decode($content, true);
-					$products->push([$data_source->name => $json_content]);
-				} elseif ($mime_type == "text/xml") {
-					// Load the XML
-					$xml_content = simplexml_load_string($content);
-					// JSON encode the XML, and then JSON decode to an array.
-					$xml_json_array = json_decode(json_encode($xml_content), true);
-					$products->push([$data_source->name => $xml_json_array]);
-				}
+	    		if (in_array($mime_type, ['text/plain', 'text/xml'])) {
+	    			$content = $this->handleApi($content, $mime_type);
+	    			if (count($content)) {
+	    				$products->push([$data_source->name => $content]);
+	    			}
+	    		}
 			}
     	}
 		return response()->json($products, 200);
     }
+
+    protected function handleApi($content, $type)
+    {
+    	if ($type == 'text/plain') {
+    		return $this->handleJsonApi($content);
+    	} elseif ($type == 'text/xml') {
+			return $this->handleXmlApi($content);
+    	} else {
+    		return collect([]);
+    	}
+    }
+
+    protected function handleJsonApi($content)
+    {
+    	$json_content = json_decode($content, true);
+
+    	return $json_content;
+    }
+
+    protected function handleXmlApi($content)
+    {
+		// Load the XML
+		$xml_content = simplexml_load_string($content);
+		// JSON encode the XML, and then JSON decode to an array.
+		$xml_json_array = json_decode(json_encode($xml_content), true);
+
+		return $xml_json_array;
+    }
+
+    protected function handleFile($url, $file_extension)
+    {
+    	// Storing the file
+    	$path = public_path('downloads/tmp.'.$file_extension);
+    	$stored = $this->storeFile($url, $path);
+
+    	if ($stored) {
+    		if ($file_extension == 'csv') {
+    			return $this->getCsvFileContent($path);
+    		} elseif ($file_extension == 'json') {
+    			return $this->getJsonFileContent($path);
+    		} elseif ($file_extension == 'xml') {
+    			return $this->getXmlFileContent($path);
+    		} elseif ($file_extension == 'xls') {
+    			return $this->getXlsFileContent($path);
+    		} elseif ($file_extension == 'xlsx') {
+    			return $this->getXlsxFileContent($path);
+    		}
+    	} else {
+    		return collect([]);
+    	}
+    }
+
+    protected function getCsvFileContent($path)
+    {
+		$file = fopen($path, "r");
+		$csv_content = array();
+		while (($data = fgetcsv($file, 200, ",")) !== FALSE) {
+			array_push($csv_content, $data);
+		}
+		fclose($file);
+
+		return $csv_content;
+    }
+
+    protected function getJsonFileContent($path)
+    {
+		$content = file_get_contents($path);
+        $json_content = json_decode($content, true);
+
+        return $json_content;
+    }
+
+    protected function getXmlFileContent($path)
+    {
+		$content = file_get_contents($path);
+		$xml_content = simplexml_load_string($content);
+		$xml_json_array = json_decode(json_encode($xml_content), true);
+
+		return $xml_json_array;
+    }
+
+    protected function getXlsFileContent($path)
+    {
+    	$xls_content = Excel::load($path)->get();
+
+    	return $xls_content;
+    } 
+
+    protected function getXlsxFileContent($path)
+    {
+    	$xlsx_content = Excel::load($path)->get();
+
+    	return $xlsx_content;
+    } 
 
     protected function storeFile($url, $path)
     {
