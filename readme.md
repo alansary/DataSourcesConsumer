@@ -114,3 +114,13 @@ http://127.0.0.1:8000/api/data_sources/all -- GET
 
 http://127.0.0.1:8000/api/consumers/getProducts -- GET
 Returns the data consumed from the data sources.
+
+## Notes:
+* You may need to "chmod -R 777 public/downloads" folder.
+
+
+## Standards/Principles Followed:
+* Object Oriented Programming (OOP) Paradigm
+* SOLID Single Responsibility Principle (SRP)
+* SOLID Interface Segregation Principle (ISP)
+* Model View Controller (MVC) Design Pattern
