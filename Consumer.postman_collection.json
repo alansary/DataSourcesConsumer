@@ -1,0 +1,92 @@
+{
+	"info": {
+		"_postman_id": "00039a48-b35e-48a5-8e77-77a324332f85",
+		"name": "Consumer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get products consumer",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/consumers/getProducts",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"consumers",
+						"getProducts"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get data sources",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/data_sources/all",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"data_sources",
+						"all"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create data source",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"JSON_API2\",\n\t\"description\": \"JSON_API2\",\n\t\"path\": \"https://jsonplaceholder.typicode.com/posts/2\"\n}"
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/api/data_sources/create",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"data_sources",
+						"create"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
